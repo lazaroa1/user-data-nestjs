@@ -4,6 +4,7 @@ import { CreateUserBody } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entity/user.entity';
 import { Repository } from 'typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UserService {
@@ -11,13 +12,20 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async create(user: CreateUserBody) {
     try {
       const createdUser = await this.userRepository.save(user);
-      // enviar o email de confirmacao de criacao
-      console.log('User created');
+
+      await this.mailerService.sendMail({
+        to: 'to@email.com',
+        from: 'from@email.com',
+        subject: 'Registro de usuario',
+        template: 'registredUser',
+        context: { user },
+      });
       return createdUser;
     } catch (error) {
       console.log(error);
